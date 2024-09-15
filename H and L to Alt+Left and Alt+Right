@@ -1,0 +1,33 @@
+// ==UserScript==
+// @name         H and L to Alt+Left and Alt+Right
+// @namespace    http://tampermonkey.net/
+// @version      1.1
+// @description  Bind h to go back and l to go forward when not in an input field
+// @author       Your Name
+// @match        *://*/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // キーが押された時のイベントを監視
+    document.addEventListener('keydown', function(e) {
+        // 入力フィールドやコンテンツ編集可能な場所にフォーカスがあるか確認
+        if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea' || e.target.isContentEditable) {
+            return; // 入力フィールド内の場合、何もしない
+        }
+
+        // 'h' キーが押された場合、前のページに戻る
+        if (e.key === 'h') {
+            e.preventDefault(); // デフォルトの動作を防ぐ
+            window.history.back(); // 前のページに戻る
+        }
+
+        // 'l' キーが押された場合、次のページに進む
+        if (e.key === 'l') {
+            e.preventDefault(); // デフォルトの動作を防ぐ
+            window.history.forward(); // 次のページに進む
+        }
+    }, false);
+})();
