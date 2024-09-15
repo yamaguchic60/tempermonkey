@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         H and L to Alt+Left and Alt+Right
+// @name         Custom Keyboard Shortcuts and Scrolling Enhancements
 // @namespace    http://tampermonkey.net/
-// @version      1.1
-// @description  Bind h to go back and l to go forward when not in an input field
+// @version      1.0
+// @description  Combine multiple custom features: H/L for navigation, space key for smooth scroll, Ctrl+F focus search on YouTube, and video navigation with S/D keys
 // @author       Your Name
 // @match        *://*/*
 // @grant        none
@@ -11,23 +11,97 @@
 (function() {
     'use strict';
 
-    // キーが押された時のイベントを監視
+    // H and L to Alt+Left and Alt+Right for browser navigation
     document.addEventListener('keydown', function(e) {
-        // 入力フィールドやコンテンツ編集可能な場所にフォーカスがあるか確認
         if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea' || e.target.isContentEditable) {
-            return; // 入力フィールド内の場合、何もしない
+            return;
         }
 
-        // 'h' キーが押された場合、前のページに戻る
         if (e.key === 'h') {
-            e.preventDefault(); // デフォルトの動作を防ぐ
-            window.history.back(); // 前のページに戻る
+            e.preventDefault();
+            window.history.back();
         }
 
-        // 'l' キーが押された場合、次のページに進む
         if (e.key === 'l') {
-            e.preventDefault(); // デフォルトの動作を防ぐ
-            window.history.forward(); // 次のページに進む
+            e.preventDefault();
+            window.history.forward();
         }
     }, false);
+
+    // Space Key Smooth Scroll with Custom Multiplier
+    const defaultScrollAmount = 500;
+    function smoothScroll(step, interval, direction, multiplier) {
+        let scrollAmount = 0;
+        const adjustedStep = step * multiplier;
+        const slideTimer = setInterval(function() {
+            window.scrollBy(0, adjustedStep * direction);
+            scrollAmount += adjustedStep;
+            if (scrollAmount >= Math.abs(defaultScrollAmount * multiplier)) {
+                clearInterval(slideTimer);
+            }
+        }, interval);
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.code === 'Space' && !document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            event.preventDefault();
+            const multiplier = 1;
+            if (event.shiftKey) {
+                smoothScroll(10, 1, -1, multiplier);
+            } else {
+                smoothScroll(10, 1, 1, multiplier);
+            }
+        }
+    });
+
+    // YouTube Ctrl+F Focus Search
+    document.addEventListener('keydown', function(event) {
+        if (event.ctrlKey && event.key === 'f' && window.location.hostname === 'www.youtube.com') {
+            event.preventDefault();
+            const searchBox = document.querySelector('input#search');
+            if (searchBox) {
+                searchBox.focus();
+            }
+        }
+    });
+
+    // YouTube Video Navigation with S/D
+    let currentIndex = -1;
+
+    function getVideoTitles() {
+        return document.querySelectorAll('#video-title');
+    }
+
+    function activateTitle(index) {
+        const titles = getVideoTitles();
+        if (index < 0 || index >= titles.length) {
+            return;
+        }
+
+        if (currentIndex >= 0 && currentIndex < titles.length) {
+            titles[currentIndex].style.backgroundColor = '';
+        }
+
+        titles[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        titles[index].style.backgroundColor = 'lightblue';
+        titles[index].focus();
+        currentIndex = index;
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea' || e.target.isContentEditable) {
+            return;
+        }
+
+        if (e.key === 's') {
+            e.preventDefault();
+            activateTitle(currentIndex + 1);
+        }
+
+        if (e.key === 'd') {
+            e.preventDefault();
+            activateTitle(currentIndex - 1);
+        }
+    });
+
 })();
